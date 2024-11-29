@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+// Game Includes
 #include "Cpp_SessionPluginCharacter.h"
+
+// Engine Includes
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -10,14 +13,20 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "OnlineSessionSettings.h"
+#include "OnlineSubsystem.h"
+#include "OnlineSubsystemUtils.h"
+#include "Interfaces/OnlineSessionInterface.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
-//////////////////////////////////////////////////////////////////////////
 // ACpp_SessionPluginCharacter
 
-ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter()
-{
+ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter():
+	// Bind the OnCreateSessionComplete delegate
+	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)) {
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -34,7 +43,7 @@ ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter()
 	// instead of recompiling to adjust them
 	GetCharacterMovement()->JumpZVelocity = 700.f;
 	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MaxWalkSpeed = 1000.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
@@ -47,33 +56,55 @@ ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter()
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	// Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+	
+	// Online Subsystem
+	if (const IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(GetWorld())) {
+		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
+
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("OnlineSubsystem found! %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
+		}
+	}
 }
 
-void ACpp_SessionPluginCharacter::BeginPlay()
-{
-	// Call the base class  
-	Super::BeginPlay();
+void ACpp_SessionPluginCharacter::OpenLobby() {
+	if (UWorld* World = GetWorld()) {
+		// Travel to the Lobby map as a Listen Server
+		World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+	}
+}
+void ACpp_SessionPluginCharacter::CallOpenLevel(const FString& Address) {
+	UGameplayStatics::OpenLevel(this, FName(*Address));
+}
+void ACpp_SessionPluginCharacter::CallClientTravel(const FString& Address) {
+	auto Pc = GetGameInstance()->GetFirstLocalPlayerController();
+	if (Pc) {
+		Pc->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+	}
 }
 
-//////////////////////////////////////////////////////////////////////////
-// Input
-
-void ACpp_SessionPluginCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ACpp_SessionPluginCharacter::NotifyControllerChanged()
 {
+	Super::NotifyControllerChanged();
+
 	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	
+}
+
+void ACpp_SessionPluginCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
@@ -90,6 +121,43 @@ void ACpp_SessionPluginCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 	else
 	{
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+	}
+}
+
+void ACpp_SessionPluginCharacter::CreateGameSession() {
+	// Called when pressing the 1 key
+	if (!OnlineSessionInterface.IsValid()) {
+		return;
+	}
+	// Destroy the existing session if it exists
+	if (auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession); ExistingSession != nullptr) {
+		OnlineSessionInterface->DestroySession(NAME_GameSession);
+	}
+	// Bind the OnCreateSessionComplete delegate
+	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+
+	// Setup the session settings
+	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
+	SessionSettings->bIsLANMatch = false;
+	SessionSettings->NumPublicConnections = 4;
+	SessionSettings->bAllowJoinInProgress = true;
+	SessionSettings->bAllowJoinViaPresence = true;
+	SessionSettings->bShouldAdvertise = true;
+	SessionSettings->bUsesPresence = true;
+
+	// Create a new session
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
+}
+
+void ACpp_SessionPluginCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {
+	if (bWasSuccessful) {
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Session %s created successfully!"), *SessionName.ToString()));
+		}
+	}
+	else if (GEngine) {
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Failed to create session!"));
 	}
 }
 
@@ -115,7 +183,6 @@ void ACpp_SessionPluginCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
 }
-
 void ACpp_SessionPluginCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
