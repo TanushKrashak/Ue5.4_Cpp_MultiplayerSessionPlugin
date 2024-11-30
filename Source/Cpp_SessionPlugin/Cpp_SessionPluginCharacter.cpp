@@ -251,7 +251,16 @@ void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessf
 	}
 }
 void ACpp_SessionPluginCharacter::OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result) {
-	
+	if (!OnlineSessionInterface.IsValid()) {
+		return;
+	}
+	FString Address;
+	if (OnlineSessionInterface->GetResolvedConnectString(NAME_GameSession, Address)) {
+		// Print the session ID and the owning user
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Blue, FString::Printf(TEXT("Found Address: %s"), *Address));
+		}
+	}
 }
 
 
