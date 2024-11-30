@@ -219,7 +219,7 @@ void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionNam
 
 	// Travel to the Lobby map as a Listen Server
 	if (UWorld* World = GetWorld()) {
-		World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+		World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
 	}
 }
 void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessful) const {
