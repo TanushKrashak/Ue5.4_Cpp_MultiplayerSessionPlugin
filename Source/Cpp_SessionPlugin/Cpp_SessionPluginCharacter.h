@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "OnlineSubsystem.h"
+#include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionDelegates.h"
 #include "Cpp_SessionPluginCharacter.generated.h"
 
@@ -74,7 +75,6 @@ class ACpp_SessionPluginCharacter : public ACharacter
 	UFUNCTION(BlueprintCallable)
 	void CallClientTravel(const FString& Address);
 
-	
 protected:
 	//================================================================================================================
 	// FUNCTIONS
@@ -92,12 +92,18 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void CreateGameSession();
 
+	UFUNCTION(BlueprintCallable)
+	void JoinGameSession();
 	
-	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
+	void OnFindSessionsComplete(const bool bWasSuccessful);
 	
 private:
 	//================================================================================================================
 	// PROPERTIES & VARIABLES
 	//================================================================================================================
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
+	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
+
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 };

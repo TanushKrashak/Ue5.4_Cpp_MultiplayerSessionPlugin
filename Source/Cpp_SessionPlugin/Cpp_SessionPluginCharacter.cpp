@@ -13,9 +13,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "OnlineSessionSettings.h"
-#include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
+#include "Online/OnlineSessionNames.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -25,7 +24,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter():
 	// Bind the OnCreateSessionComplete delegate
-	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)) {
+	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
+	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)) {
 	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -124,6 +124,42 @@ void ACpp_SessionPluginCharacter::SetupPlayerInputComponent(UInputComponent* Pla
 	}
 }
 
+void ACpp_SessionPluginCharacter::Move(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		// get forward vector
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	
+		// get right vector 
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement 
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void ACpp_SessionPluginCharacter::Look(const FInputActionValue& Value)
+{
+	// input is a Vector2D
+	FVector2D LookAxisVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		// add yaw and pitch input to controller
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
 void ACpp_SessionPluginCharacter::CreateGameSession() {
 	// Called when pressing the 1 key
 	if (!OnlineSessionInterface.IsValid()) {
@@ -150,8 +186,26 @@ void ACpp_SessionPluginCharacter::CreateGameSession() {
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);
 }
+void ACpp_SessionPluginCharacter::JoinGameSession() {
+	if (!OnlineSessionInterface.IsValid()) {
+		return;
+	}
+	// Bind the OnFindSessionsComplete delegate
+	OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	
+	// Setup the session search
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->MaxSearchResults = 10000;
+	SessionSearch->bIsLanQuery = false;
+	// Making sure Presence is set to true, which means that we will only find sessions that are joinable
+	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	
+	// Find the sessions
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
+}
 
-void ACpp_SessionPluginCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful) {
+void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) {
 	if (bWasSuccessful) {
 		if (GEngine) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Session %s created successfully!"), *SessionName.ToString()));
@@ -161,38 +215,18 @@ void ACpp_SessionPluginCharacter::OnCreateSessionComplete(FName SessionName, boo
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Failed to create session!"));
 	}
 }
-
-void ACpp_SessionPluginCharacter::Move(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
+void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessful) {
+	// Go through the search results
+	for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults) {
+		FString ID = SearchResult.GetSessionIdStr();
+		FString User = SearchResult.Session.OwningUserName;
+		if (GEngine) {
+			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Found ID: %s owned by User: %s"), *ID, *User));
+		}
 	}
 }
-void ACpp_SessionPluginCharacter::Look(const FInputActionValue& Value)
-{
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
-}
+
+
+
+
