@@ -8,6 +8,7 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSessionSettings.h"
 #include "Interfaces/OnlineSessionDelegates.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Cpp_SessionPluginCharacter.generated.h"
 
 // Forward Declarations
@@ -97,6 +98,7 @@ protected:
 	
 	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
 	void OnFindSessionsComplete(const bool bWasSuccessful);
+	void OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result);
 	
 private:
 	//================================================================================================================
@@ -104,6 +106,7 @@ private:
 	//================================================================================================================
 	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
+	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 };

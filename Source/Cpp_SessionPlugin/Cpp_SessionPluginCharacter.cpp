@@ -23,9 +23,10 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 // ACpp_SessionPluginCharacter
 
 ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter():
-	// Bind the OnCreateSessionComplete delegate
+	// Bind All Delegates For Online Subsystem Sessions
 	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
-	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)) {
+	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)),
+	JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete)) {
 	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -169,7 +170,7 @@ void ACpp_SessionPluginCharacter::CreateGameSession() {
 	if (auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession); ExistingSession != nullptr) {
 		OnlineSessionInterface->DestroySession(NAME_GameSession);
 	}
-	// Bind the OnCreateSessionComplete delegate
+	// Enables the CreateSessionCompleteDelegate delegate to be called
 	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
 	// Setup the session settings
@@ -181,6 +182,8 @@ void ACpp_SessionPluginCharacter::CreateGameSession() {
 	SessionSettings->bShouldAdvertise = true;
 	SessionSettings->bUsesPresence = true;
 	SessionSettings->bUseLobbiesIfAvailable = true;
+	// This MatchType is a custom key that we can use to filter sessions
+	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 	// Create a new session
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -190,7 +193,7 @@ void ACpp_SessionPluginCharacter::JoinGameSession() {
 	if (!OnlineSessionInterface.IsValid()) {
 		return;
 	}
-	// Bind the OnFindSessionsComplete delegate
+	// Enables the FindSessionsCompleteDelegate delegate to be called
 	OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	
 	// Setup the session search
@@ -214,16 +217,41 @@ void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionNam
 	else if (GEngine) {
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Failed to create session!"));
 	}
+
+	// Travel to the Lobby map as a Listen Server
+	if (UWorld* World = GetWorld()) {
+		World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
+	}
 }
 void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessful) {
+	if (!OnlineSessionInterface.IsValid()) {
+		return;
+	}
+	
 	// Go through the search results
 	for (const FOnlineSessionSearchResult& SearchResult : SessionSearch->SearchResults) {
 		FString ID = SearchResult.GetSessionIdStr();
 		FString User = SearchResult.Session.OwningUserName;
-		if (GEngine) {
-			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Found ID: %s owned by User: %s"), *ID, *User));
+
+		FString MatchType;
+		SearchResult.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		// Check if the session is a FreeForAll session
+		if (MatchType == "FreeForAll") {
+			// Print the session ID and the owning user
+			if (GEngine) {
+				GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green, FString::Printf(TEXT("Found ID: %s owned by User: %s"), *ID, *User));
+			}
+			// Enables the JoinSessionComplete delegate to be called
+			OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+			// Join the session
+			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SearchResult);
 		}
 	}
+}
+void ACpp_SessionPluginCharacter::OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result) {
+	
 }
 
 
