@@ -84,8 +84,7 @@ void ACpp_SessionPluginCharacter::CallOpenLevel(const FString& Address) {
 	UGameplayStatics::OpenLevel(this, FName(*Address));
 }
 void ACpp_SessionPluginCharacter::CallClientTravel(const FString& Address) {
-	auto Pc = GetGameInstance()->GetFirstLocalPlayerController();
-	if (Pc) {
+	if (auto Pc = GetGameInstance()->GetFirstLocalPlayerController()) {
 		Pc->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 	}
 }
@@ -173,7 +172,7 @@ void ACpp_SessionPluginCharacter::CreateGameSession() {
 	// Enables the CreateSessionCompleteDelegate delegate to be called
 	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
-	// Setup the session settings
+	// Set up the session settings
 	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
 	SessionSettings->bIsLANMatch = false;
 	SessionSettings->NumPublicConnections = 4;
@@ -196,11 +195,11 @@ void ACpp_SessionPluginCharacter::JoinGameSession() {
 	// Enables the FindSessionsCompleteDelegate delegate to be called
 	OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 	
-	// Setup the session search
+	// Set up the session search
 	SessionSearch = MakeShareable(new FOnlineSessionSearch());
 	SessionSearch->MaxSearchResults = 10000;
 	SessionSearch->bIsLanQuery = false;
-	// Making sure Presence is set to true, which means that we will only find sessions that are joinable
+	// Making sure Presence is set to true, which means that we will only find sessions that are join-able
 	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 	
 	// Find the sessions
@@ -208,7 +207,7 @@ void ACpp_SessionPluginCharacter::JoinGameSession() {
 	OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
 }
 
-void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) {
+void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) const {
 	if (bWasSuccessful) {
 		if (GEngine) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Session %s created successfully!"), *SessionName.ToString()));
@@ -223,7 +222,7 @@ void ACpp_SessionPluginCharacter::OnCreateSessionComplete(const FName SessionNam
 		World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
 	}
 }
-void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessful) {
+void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessful) const {
 	if (!OnlineSessionInterface.IsValid()) {
 		return;
 	}
@@ -250,7 +249,7 @@ void ACpp_SessionPluginCharacter::OnFindSessionsComplete(const bool bWasSuccessf
 		}
 	}
 }
-void ACpp_SessionPluginCharacter::OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result) {
+void ACpp_SessionPluginCharacter::OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result) const {
 	if (!OnlineSessionInterface.IsValid()) {
 		return;
 	}
@@ -260,6 +259,11 @@ void ACpp_SessionPluginCharacter::OnJoinSessionComplete(const FName SessionName,
 		if (GEngine) {
 			GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Blue, FString::Printf(TEXT("Found Address: %s"), *Address));
 		}
+
+		if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController()) {
+			PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+		}
+		
 	}
 }
 

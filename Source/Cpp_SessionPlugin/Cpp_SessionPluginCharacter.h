@@ -96,9 +96,9 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void JoinGameSession();
 	
-	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
-	void OnFindSessionsComplete(const bool bWasSuccessful);
-	void OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result);
+	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
+	void OnFindSessionsComplete(const bool bWasSuccessful) const;
+	void OnJoinSessionComplete(const FName SessionName, const EOnJoinSessionCompleteResult::Type Result) const;
 	
 private:
 	//================================================================================================================
