@@ -12,3 +12,18 @@ UCpp_GISubsystem_Sessions::UCpp_GISubsystem_Sessions() {
 		SessionInterface = OnlineSubsystem->GetSessionInterface();
 	}
 }
+void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, const FString& MatchType) {
+	
+}
+void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
+	
+}
+void UCpp_GISubsystem_Sessions::JoinSession(const FOnlineSessionSearchResult& SearchResult) {
+	
+}
+void UCpp_GISubsystem_Sessions::DestroySession() {
+	
+}
+void UCpp_GISubsystem_Sessions::StartSession() {
+	
+}
