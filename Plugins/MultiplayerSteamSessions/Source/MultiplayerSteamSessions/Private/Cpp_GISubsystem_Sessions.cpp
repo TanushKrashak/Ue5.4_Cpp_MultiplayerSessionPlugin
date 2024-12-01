@@ -11,7 +11,9 @@ UCpp_GISubsystem_Sessions::UCpp_GISubsystem_Sessions() :
 	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &UCpp_GISubsystem_Sessions::OnFindSessionsComplete)),
 	JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &UCpp_GISubsystem_Sessions::OnJoinSessionComplete)),
 	DestroySessionCompleteDelegate(FOnDestroySessionCompleteDelegate::CreateUObject(this, &UCpp_GISubsystem_Sessions::OnDestroySessionComplete)),
-	StartSessionCompleteDelegate(FOnStartSessionCompleteDelegate::CreateUObject(this, &UCpp_GISubsystem_Sessions::OnStartSessionComplete)) {
+	StartSessionCompleteDelegate(FOnStartSessionCompleteDelegate::CreateUObject(this, &UCpp_GISubsystem_Sessions::OnStartSessionComplete))
+{
+	
 	// Get the online subsystem
 	if (IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get()) {
 		// Get the session interface
