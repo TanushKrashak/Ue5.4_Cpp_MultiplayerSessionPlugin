@@ -34,6 +34,17 @@ public:
 	void DestroySession();
 	void StartSession();
 
+protected:
+	//================================================================================================================
+	// FUNCTIONS
+	//================================================================================================================
+	// Internal callbacks for the delegates we'll add to the OnlineSessionInterface
+	// don't need to be called from outside
+	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
+	void OnFindSessionsComplete(const bool bWasSuccessful) const;
+	void OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) const;
+	void OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const;
+	void OnStartSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
 	
 private:
 	//================================================================================================================
