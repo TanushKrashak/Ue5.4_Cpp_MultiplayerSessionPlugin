@@ -3,6 +3,7 @@
 
 #include "Cpp_WGT_Menu.h"
 #include "Components/Button.h"
+#include "Cpp_GISubsystem_Sessions.h"
 
 void UCpp_WGT_Menu::InitializeMenu() {
 	// Add the widget to the viewport & set it to visible & focusable
@@ -18,6 +19,12 @@ void UCpp_WGT_Menu::InitializeMenu() {
 			InputMode.SetWidgetToFocus(TakeWidget());
 			InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			PlayerController->SetInputMode(InputMode);
+		}
+	}
+
+	if (UGameInstance* GameInstance = GetGameInstance()) {
+		if (auto Subsystem = GameInstance->GetSubsystem<UCpp_GISubsystem_Sessions>()) {
+			MultiplayerSessionSubsystem = Subsystem;
 		}
 	}
 	
@@ -38,8 +45,12 @@ bool UCpp_WGT_Menu::Initialize() {
 }
 
 void UCpp_WGT_Menu::OnHostClicked() {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Host Clicked!"));
+	if (MultiplayerSessionSubsystem) {
+		MultiplayerSessionSubsystem->CreateSession(4, "FreeForAll");
+	}
 }
 void UCpp_WGT_Menu::OnJoinClicked() {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("Join Clicked!"));
+	if (MultiplayerSessionSubsystem) {
+		
+	}
 }

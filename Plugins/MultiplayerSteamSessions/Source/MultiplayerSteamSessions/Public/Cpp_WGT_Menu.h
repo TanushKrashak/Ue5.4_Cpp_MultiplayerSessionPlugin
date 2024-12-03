@@ -7,6 +7,7 @@
 #include "Cpp_WGT_Menu.generated.h"
 
 // Forward Declarations
+class UCpp_GISubsystem_Sessions;
 class UButton;
 
 /**
@@ -40,6 +41,9 @@ private:
 	UPROPERTY(meta = (BindWidget))
 	UButton* BTN_Join;
 
+	// Subsystem designed to handle session functionality
+	UCpp_GISubsystem_Sessions* MultiplayerSessionSubsystem;
+	
 	//================================================================================================================
 	// FUNCTIONS
 	//================================================================================================================
