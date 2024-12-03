@@ -51,6 +51,7 @@ private:
 	// PROPERTIES & VARIABLES
 	//================================================================================================================
 	IOnlineSessionPtr SessionInterface;
+	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	
 	// To Add to the OnlineSessionInterface Delegate List
 	// We'll bind our MultiplayerSessionSubsystem internal callbacks to these. 
