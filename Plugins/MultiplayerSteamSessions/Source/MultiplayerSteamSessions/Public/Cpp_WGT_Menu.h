@@ -30,6 +30,7 @@ protected:
 	// FUNCTIONS
 	//================================================================================================================
 	virtual bool Initialize() override;
+	virtual void NativeDestruct() override;
 
 private:
 	//================================================================================================================
@@ -42,7 +43,8 @@ private:
 	UButton* BTN_Join;
 
 	// Subsystem designed to handle session functionality
-	UCpp_GISubsystem_Sessions* MultiplayerSessionSubsystem;
+	UPROPERTY()
+	UCpp_GISubsystem_Sessions* MultiplayerSessionSubsystem = nullptr;
 	
 	//================================================================================================================
 	// FUNCTIONS
@@ -52,4 +54,7 @@ private:
 
 	UFUNCTION()
 	void OnJoinClicked();
+
+	UFUNCTION()
+	void DestroyWidget();
 };

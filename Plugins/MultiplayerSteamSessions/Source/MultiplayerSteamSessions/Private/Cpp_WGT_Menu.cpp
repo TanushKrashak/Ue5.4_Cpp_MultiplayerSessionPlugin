@@ -29,6 +29,7 @@ void UCpp_WGT_Menu::InitializeMenu() {
 	}
 	
 }
+
 bool UCpp_WGT_Menu::Initialize() {
 	if (!Super::Initialize()) {
 		return false;
@@ -43,14 +44,31 @@ bool UCpp_WGT_Menu::Initialize() {
 	}
 	return true;
 }
+void UCpp_WGT_Menu::NativeDestruct() {
+	DestroyWidget();
+	Super::NativeDestruct();
+}
 
 void UCpp_WGT_Menu::OnHostClicked() {
 	if (MultiplayerSessionSubsystem) {
 		MultiplayerSessionSubsystem->CreateSession(4, "FreeForAll");
+		if (UWorld* World = GetWorld()) {
+			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
+		}
 	}
 }
 void UCpp_WGT_Menu::OnJoinClicked() {
 	if (MultiplayerSessionSubsystem) {
 		
 	}
+}
+
+void UCpp_WGT_Menu::DestroyWidget() {
+	if (const UWorld* World = GetWorld()) {
+		if (APlayerController* PlayerController = World->GetFirstPlayerController()) {
+			PlayerController->SetInputMode(FInputModeGameOnly());
+			PlayerController->bShowMouseCursor = false;
+		}
+	}
+	RemoveFromParent();
 }
