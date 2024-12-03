@@ -5,14 +5,17 @@
 #include "Components/Button.h"
 #include "Cpp_GISubsystem_Sessions.h"
 
-void UCpp_WGT_Menu::InitializeMenu() {
+void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FString& InMatchType) {
+	NumPublicConnections = PublicConnectionsCount;
+	MatchType = InMatchType;
+
 	// Add the widget to the viewport & set it to visible & focusable
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
 	SetIsFocusable(true);
 
 	// Show the mouse cursor & set the input mode to UI only
-	if (UWorld* World = GetWorld()) {
+	if (const UWorld* World = GetWorld()) {
 		if (APlayerController* PlayerController = World->GetFirstPlayerController()) {
 			PlayerController->bShowMouseCursor = true;
 			FInputModeUIOnly InputMode;
@@ -22,8 +25,8 @@ void UCpp_WGT_Menu::InitializeMenu() {
 		}
 	}
 
-	if (UGameInstance* GameInstance = GetGameInstance()) {
-		if (auto Subsystem = GameInstance->GetSubsystem<UCpp_GISubsystem_Sessions>()) {
+	if (const UGameInstance* GameInstance = GetGameInstance()) {
+		if (const auto Subsystem = GameInstance->GetSubsystem<UCpp_GISubsystem_Sessions>()) {
 			MultiplayerSessionSubsystem = Subsystem;
 		}
 	}
@@ -44,16 +47,14 @@ bool UCpp_WGT_Menu::Initialize() {
 	}
 	return true;
 }
-void UCpp_WGT_Menu::NativeDestruct() {
-	DestroyWidget();
-	Super::NativeDestruct();
-}
+
 
 void UCpp_WGT_Menu::OnHostClicked() {
 	if (MultiplayerSessionSubsystem) {
-		MultiplayerSessionSubsystem->CreateSession(4, "FreeForAll");
+		MultiplayerSessionSubsystem->CreateSession(NumPublicConnections, MatchType);
 		if (UWorld* World = GetWorld()) {
 			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
+			DestroyWidget();
 		}
 	}
 }

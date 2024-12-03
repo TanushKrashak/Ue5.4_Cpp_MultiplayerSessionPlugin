@@ -23,14 +23,13 @@ public:
 	// FUNCTIONS
 	//================================================================================================================
 	UFUNCTION(BlueprintCallable, Category = "Setup")
-	void InitializeMenu();
+	void InitializeMenu(const int32 PublicConnectionsCount = 4, const FString& InMatchType = "FreeForAll");
 
 protected:
 	//================================================================================================================
 	// FUNCTIONS
 	//================================================================================================================
 	virtual bool Initialize() override;
-	virtual void NativeDestruct() override;
 
 private:
 	//================================================================================================================
@@ -45,6 +44,9 @@ private:
 	// Subsystem designed to handle session functionality
 	UPROPERTY()
 	UCpp_GISubsystem_Sessions* MultiplayerSessionSubsystem = nullptr;
+
+	int32 NumPublicConnections{4};
+	FString MatchType{"FreeForAll"};
 	
 	//================================================================================================================
 	// FUNCTIONS
