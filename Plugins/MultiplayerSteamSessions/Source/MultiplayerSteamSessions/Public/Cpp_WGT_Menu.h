@@ -32,6 +32,7 @@ protected:
 	virtual bool Initialize() override;
 
 	// Callbacks for the custom delegates on the session subsystem
+	UFUNCTION()
 	void OnCreateSession(const bool bWasSuccesful);
 
 private:

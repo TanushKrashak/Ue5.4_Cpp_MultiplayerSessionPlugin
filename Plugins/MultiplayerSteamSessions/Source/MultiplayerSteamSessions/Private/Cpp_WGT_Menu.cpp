@@ -55,15 +55,17 @@ bool UCpp_WGT_Menu::Initialize() {
 
 void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccesful) {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, bWasSuccesful ? "Session Created!" : "Session Creation Failed!");
+	if (bWasSuccesful) {
+		if (UWorld* World = GetWorld()) {
+			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
+			DestroyWidget();
+		}
+	}
 }
 
 void UCpp_WGT_Menu::OnHostClicked() {
 	if (MultiplayerSessionSubsystem) {
 		MultiplayerSessionSubsystem->CreateSession(NumPublicConnections, MatchType);
-		if (UWorld* World = GetWorld()) {
-			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
-			DestroyWidget();
-		}
 	}
 }
 void UCpp_WGT_Menu::OnJoinClicked() {
