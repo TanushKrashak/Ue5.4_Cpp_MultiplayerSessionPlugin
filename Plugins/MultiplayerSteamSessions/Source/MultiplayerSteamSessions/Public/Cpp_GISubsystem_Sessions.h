@@ -8,6 +8,10 @@
 
 #include "Cpp_GISubsystem_Sessions.generated.h"
 
+// Custom Delegates For Menu Class
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
+
+
 /**
  * 
  */
@@ -21,6 +25,9 @@ public:
 	// PROPERTIES & VARIABLES
 	//================================================================================================================
 
+	// Custom Delegates For Menu Class
+	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
+	
 
 	//================================================================================================================
 	// FUNCTIONS
@@ -40,7 +47,7 @@ protected:
 	//================================================================================================================
 	// Internal callbacks for the delegates we'll add to the OnlineSessionInterface
 	// don't need to be called from outside
-	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
+	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
 	void OnFindSessionsComplete(const bool bWasSuccessful) const;
 	void OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) const;
 	void OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const;

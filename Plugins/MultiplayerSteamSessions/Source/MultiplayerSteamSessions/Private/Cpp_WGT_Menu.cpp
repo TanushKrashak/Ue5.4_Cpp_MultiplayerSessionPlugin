@@ -25,12 +25,17 @@ void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FSt
 		}
 	}
 
+	// Get the GameInstance and the Subsystem
 	if (const UGameInstance* GameInstance = GetGameInstance()) {
 		if (const auto Subsystem = GameInstance->GetSubsystem<UCpp_GISubsystem_Sessions>()) {
 			MultiplayerSessionSubsystem = Subsystem;
 		}
 	}
-	
+
+	// Bind the custom delegate to the OnCreateSession function
+	if (MultiplayerSessionSubsystem) {
+		MultiplayerSessionSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &UCpp_WGT_Menu::OnCreateSession);
+	}
 }
 
 bool UCpp_WGT_Menu::Initialize() {
@@ -48,6 +53,9 @@ bool UCpp_WGT_Menu::Initialize() {
 	return true;
 }
 
+void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccesful) {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, bWasSuccesful ? "Session Created!" : "Session Creation Failed!");
+}
 
 void UCpp_WGT_Menu::OnHostClicked() {
 	if (MultiplayerSessionSubsystem) {

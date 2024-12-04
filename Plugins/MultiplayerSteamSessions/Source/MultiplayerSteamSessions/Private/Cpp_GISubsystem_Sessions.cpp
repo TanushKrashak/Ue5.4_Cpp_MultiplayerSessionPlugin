@@ -47,9 +47,12 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 
 	// Create a new session
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	// If the session creation fails, remove the delegate
 	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings)) {
+		// If the session creation fails, remove the delegate
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+
+		// Call the custom delegate
+		MultiplayerOnCreateSessionComplete.Broadcast(false);
 	}
 }
 void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
@@ -65,8 +68,12 @@ void UCpp_GISubsystem_Sessions::StartSession() {
 	
 }
 
-void UCpp_GISubsystem_Sessions::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) const {
-	
+void UCpp_GISubsystem_Sessions::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) {
+	// Clear the delegate
+	if (SessionInterface.IsValid()) {
+		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+	}
+	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful) const {
 
