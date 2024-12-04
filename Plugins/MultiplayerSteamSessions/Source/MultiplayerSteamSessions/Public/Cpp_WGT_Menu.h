@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "Cpp_WGT_Menu.generated.h"
 
 // Forward Declarations
@@ -34,6 +35,12 @@ protected:
 	// Callbacks for the custom delegates on the session subsystem
 	UFUNCTION()
 	void OnCreateSession(const bool bWasSuccesful);
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, const bool bWasSuccessful);
+	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
+	UFUNCTION()
+	void OnDestroySession(const bool bWasSuccessful);
+	UFUNCTION()
+	void OnStartSession(const bool bWasSuccessful);
 
 private:
 	//================================================================================================================

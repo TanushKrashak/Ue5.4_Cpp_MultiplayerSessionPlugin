@@ -35,6 +35,10 @@ void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FSt
 	// Bind the custom delegate to the OnCreateSession function
 	if (MultiplayerSessionSubsystem) {
 		MultiplayerSessionSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &UCpp_WGT_Menu::OnCreateSession);
+		MultiplayerSessionSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &UCpp_WGT_Menu::OnFindSessions);
+		MultiplayerSessionSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &UCpp_WGT_Menu::OnJoinSession);
+		MultiplayerSessionSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UCpp_WGT_Menu::OnDestroySession);
+		MultiplayerSessionSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &UCpp_WGT_Menu::OnStartSession);
 	}
 }
 
@@ -61,6 +65,18 @@ void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccesful) {
 			DestroyWidget();
 		}
 	}
+}
+void UCpp_WGT_Menu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, const bool bWasSuccessful) {
+	
+}
+void UCpp_WGT_Menu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result) {
+
+}
+void UCpp_WGT_Menu::OnDestroySession(const bool bWasSuccessful) {
+
+}
+void UCpp_WGT_Menu::OnStartSession(const bool bWasSuccessful) {
+
 }
 
 void UCpp_WGT_Menu::OnHostClicked() {
