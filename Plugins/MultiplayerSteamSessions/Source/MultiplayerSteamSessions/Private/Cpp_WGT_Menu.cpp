@@ -4,6 +4,7 @@
 #include "Cpp_WGT_Menu.h"
 #include "Components/Button.h"
 #include "Cpp_GISubsystem_Sessions.h"
+#include "OnlineSessionSettings.h"
 
 void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FString& InMatchType) {
 	NumPublicConnections = PublicConnectionsCount;
@@ -67,7 +68,19 @@ void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccessful) {
 	}
 }
 void UCpp_WGT_Menu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, const bool bWasSuccessful) {
+	if (!bWasSuccessful || !MultiplayerSessionSubsystem) {
+		return;
+	}
 	
+	// Go through the results and check if they match the desired match type
+	for (auto Result : SessionResults) {
+		FString SettingsValue;
+		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+		if (SettingsValue == MatchType) {
+			MultiplayerSessionSubsystem->JoinSession(Result);
+			return;
+		}
+	}
 }
 void UCpp_WGT_Menu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result) {
 

@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 
 // Engine Includes
 #include "Cpp_GISubsystem_Sessions.h"
@@ -96,8 +94,19 @@ void UCpp_GISubsystem_Sessions::OnCreateSessionComplete(const FName SessionName,
 	}
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
-void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful) const {
+void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful) {
+	if (SessionInterface.IsValid()) {
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+	}
 
+	// If the search was successful but there are no results, Let the menu know that it failed
+	if (LastSessionSearch->SearchResults.Num() == 0) {
+		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+		return;
+	}
+	
+	// Let the menu know that the search is complete
+	MultiplayerOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, bWasSuccessful);
 }
 void UCpp_GISubsystem_Sessions::OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) const {
 
