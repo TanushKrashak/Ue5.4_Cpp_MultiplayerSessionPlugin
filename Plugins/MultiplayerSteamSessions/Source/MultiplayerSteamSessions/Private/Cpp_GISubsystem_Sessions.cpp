@@ -78,7 +78,21 @@ void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
 	}
 }
 void UCpp_GISubsystem_Sessions::JoinSession(const FOnlineSessionSearchResult& SearchResult) {
-	
+	if (!SessionInterface.IsValid()) {
+		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+		return;
+	}
+
+	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SearchResult)) {
+		// If the join fails, remove the delegate
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+
+		// Let the menu know that the join failed
+		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+	}
 }
 void UCpp_GISubsystem_Sessions::DestroySession() {
 	
@@ -108,8 +122,13 @@ void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful
 	// Let the menu know that the search is complete
 	MultiplayerOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, bWasSuccessful);
 }
-void UCpp_GISubsystem_Sessions::OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) const {
+void UCpp_GISubsystem_Sessions::OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) {
+	// Clear the delegate
+	if (SessionInterface.IsValid()) {
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+	}
 
+	MultiplayerOnJoinSessionComplete.Broadcast(Result);
 }
 void UCpp_GISubsystem_Sessions::OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const {
 

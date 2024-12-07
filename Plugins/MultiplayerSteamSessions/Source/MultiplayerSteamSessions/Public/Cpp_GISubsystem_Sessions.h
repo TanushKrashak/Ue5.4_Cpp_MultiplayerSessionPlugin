@@ -57,7 +57,7 @@ protected:
 	// don't need to be called from outside
 	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
 	void OnFindSessionsComplete(const bool bWasSuccessful);
-	void OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) const;
+	void OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	void OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const;
 	void OnStartSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
 	

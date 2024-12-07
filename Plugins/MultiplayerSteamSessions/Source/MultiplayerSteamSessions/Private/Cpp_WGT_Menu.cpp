@@ -83,7 +83,17 @@ void UCpp_WGT_Menu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& Ses
 	}
 }
 void UCpp_WGT_Menu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result) {
+	// If the join was successful, travel to the game map
+	if (const IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get()) {
+		if (const IOnlineSessionPtr SessionInterface = OnlineSubsystem->GetSessionInterface(); SessionInterface.IsValid()) {
+			FString Address;
+			SessionInterface->GetResolvedConnectString(NAME_GameSession, Address);
 
+			if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController()) {
+				PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+			}
+		}
+	}
 }
 void UCpp_WGT_Menu::OnDestroySession(const bool bWasSuccessful) {
 
