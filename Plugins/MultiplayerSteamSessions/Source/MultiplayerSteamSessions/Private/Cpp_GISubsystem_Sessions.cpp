@@ -6,6 +6,7 @@
 
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "Online/OnlineSessionNames.h"
 
 UCpp_GISubsystem_Sessions::UCpp_GISubsystem_Sessions() :
 	// Bind All Delegates For Online Subsystem Sessions
@@ -56,7 +57,27 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 	}
 }
 void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
-	
+	if (!SessionInterface.IsValid()) {
+		return;
+	}
+
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+
+	// Set up the session search
+	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
+	LastSessionSearch->MaxSearchResults = MaxSearchResults;
+	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
+	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+	// Find the sessions
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef())) {
+		// Session search failed, remove the delegate
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+
+		// Let the menu know that the search failed
+		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+	}
 }
 void UCpp_GISubsystem_Sessions::JoinSession(const FOnlineSessionSearchResult& SearchResult) {
 	

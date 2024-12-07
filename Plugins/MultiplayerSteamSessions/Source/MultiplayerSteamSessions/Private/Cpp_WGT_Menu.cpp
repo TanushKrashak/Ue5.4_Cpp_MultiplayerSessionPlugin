@@ -57,9 +57,9 @@ bool UCpp_WGT_Menu::Initialize() {
 	return true;
 }
 
-void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccesful) {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, bWasSuccesful ? "Session Created!" : "Session Creation Failed!");
-	if (bWasSuccesful) {
+void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccessful) {
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, bWasSuccessful ? "Session Created!" : "Session Creation Failed!");
+	if (bWasSuccessful) {
 		if (UWorld* World = GetWorld()) {
 			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
 			DestroyWidget();
@@ -86,7 +86,7 @@ void UCpp_WGT_Menu::OnHostClicked() {
 }
 void UCpp_WGT_Menu::OnJoinClicked() {
 	if (MultiplayerSessionSubsystem) {
-		
+		MultiplayerSessionSubsystem->FindSessions(10000);
 	}
 }
 

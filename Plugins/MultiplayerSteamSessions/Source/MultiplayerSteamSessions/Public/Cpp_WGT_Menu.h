@@ -34,7 +34,7 @@ protected:
 
 	// Callbacks for the custom delegates on the session subsystem
 	UFUNCTION()
-	void OnCreateSession(const bool bWasSuccesful);
+	void OnCreateSession(const bool bWasSuccessful);
 	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, const bool bWasSuccessful);
 	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
 	UFUNCTION()

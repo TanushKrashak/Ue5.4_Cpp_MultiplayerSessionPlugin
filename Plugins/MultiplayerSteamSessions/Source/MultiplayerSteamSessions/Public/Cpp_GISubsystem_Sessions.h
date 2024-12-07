@@ -64,9 +64,10 @@ protected:
 private:
 	//================================================================================================================
 	// PROPERTIES & VARIABLES
-	//================================================================================================================
+	//================================================================================================================	
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
+	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 	
 	// To Add to the OnlineSessionInterface Delegate List
 	// We'll bind our MultiplayerSessionSubsystem internal callbacks to these. 
@@ -74,7 +75,7 @@ private:
 	FDelegateHandle CreateSessionCompleteDelegateHandle;
 	
 	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
-	FDelegateHandle FindSessionsComplete;
+	FDelegateHandle FindSessionsCompleteDelegateHandle;
 	
 	FOnJoinSessionCompleteDelegate JoinSessionCompleteDelegate;
 	FDelegateHandle JoinSessionCompleteDelegateHandle;
