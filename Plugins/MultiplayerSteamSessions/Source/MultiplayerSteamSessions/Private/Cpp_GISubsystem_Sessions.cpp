@@ -27,11 +27,11 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 		return;
 	}
 	// Destroy the existing session if it exists
-	if (auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession); ExistingSession != nullptr) {
-		SessionInterface->DestroySession(NAME_GameSession);
+	if (auto ExistingSession = SessionInterface.Pin()->GetNamedSession(NAME_GameSession); ExistingSession != nullptr) {
+		SessionInterface.Pin()->DestroySession(NAME_GameSession);
 	}
 	// Store the delegate so that it can be removed later. Also, bind the delegate to the internal callback
-	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+	CreateSessionCompleteDelegateHandle = SessionInterface.Pin()->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
 	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
@@ -46,9 +46,9 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 
 	// Create a new session
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings)) {
+	if (!SessionInterface.Pin()->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings)) {
 		// If the session creation fails, remove the delegate
-		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 
 		// Call the custom delegate
 		MultiplayerOnCreateSessionComplete.Broadcast(false);
@@ -59,7 +59,7 @@ void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
 		return;
 	}
 
-	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	FindSessionsCompleteDelegateHandle = SessionInterface.Pin()->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 
 	// Set up the session search
 	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());
@@ -69,9 +69,9 @@ void UCpp_GISubsystem_Sessions::FindSessions(const int32 MaxSearchResults) {
 
 	// Find the sessions
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef())) {
+	if (!SessionInterface.Pin()->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef())) {
 		// Session search failed, remove the delegate
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 
 		// Let the menu know that the search failed
 		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
@@ -83,12 +83,12 @@ void UCpp_GISubsystem_Sessions::JoinSession(const FOnlineSessionSearchResult& Se
 		return;
 	}
 
-	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+	JoinSessionCompleteDelegateHandle = SessionInterface.Pin()->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-	if (!SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SearchResult)) {
+	if (!SessionInterface.Pin()->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SearchResult)) {
 		// If the join fails, remove the delegate
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 
 		// Let the menu know that the join failed
 		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
@@ -104,13 +104,13 @@ void UCpp_GISubsystem_Sessions::StartSession() {
 void UCpp_GISubsystem_Sessions::OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful) {
 	// Clear the delegate
 	if (SessionInterface.IsValid()) {
-		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	}
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful) {
 	if (SessionInterface.IsValid()) {
-		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 	}
 
 	// If the search was successful but there are no results, Let the menu know that it failed
@@ -125,7 +125,7 @@ void UCpp_GISubsystem_Sessions::OnFindSessionsComplete(const bool bWasSuccessful
 void UCpp_GISubsystem_Sessions::OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result) {
 	// Clear the delegate
 	if (SessionInterface.IsValid()) {
-		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+		SessionInterface.Pin()->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
 	}
 
 	MultiplayerOnJoinSessionComplete.Broadcast(Result);

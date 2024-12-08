@@ -65,7 +65,7 @@ private:
 	//================================================================================================================
 	// PROPERTIES & VARIABLES
 	//================================================================================================================	
-	IOnlineSessionPtr SessionInterface;
+	TWeakPtr<IOnlineSession> SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 	
