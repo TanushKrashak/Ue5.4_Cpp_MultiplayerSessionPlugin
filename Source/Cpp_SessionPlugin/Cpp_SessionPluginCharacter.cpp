@@ -68,9 +68,9 @@ ACpp_SessionPluginCharacter::ACpp_SessionPluginCharacter():
 	if (const IOnlineSubsystem* OnlineSubsystem = Online::GetSubsystem(GetWorld())) {
 		OnlineSessionInterface = OnlineSubsystem->GetSessionInterface();
 
-		if (GEngine) {
+		/*if (GEngine) {
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("OnlineSubsystem found! %s"), *OnlineSubsystem->GetSubsystemName().ToString()));
-		}
+		}*/
 	}
 }
 

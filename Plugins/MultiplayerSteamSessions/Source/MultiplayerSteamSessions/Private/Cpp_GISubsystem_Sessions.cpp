@@ -43,6 +43,7 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 	LastSessionSettings->bUseLobbiesIfAvailable = true;
 	// This MatchType is a custom key that we can use to filter sessions
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->BuildUniqueId = 1;
 
 	// Create a new session
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
