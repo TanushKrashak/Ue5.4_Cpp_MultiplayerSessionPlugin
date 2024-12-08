@@ -12,7 +12,13 @@ class ACpp_SessionPluginGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
+	//================================================================================================================
+	// FUNCTIONS
+	//================================================================================================================
 	ACpp_SessionPluginGameMode();
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void Logout(AController* Exiting) override;
 };
 
 
