@@ -68,6 +68,9 @@ void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccessful) {
 			DestroyWidget();
 		}
 	}
+	else {
+		BTN_Host->SetIsEnabled(true);
+	}
 }
 void UCpp_WGT_Menu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, const bool bWasSuccessful) {
 	if (!bWasSuccessful || !MultiplayerSessionSubsystem) {
@@ -83,6 +86,10 @@ void UCpp_WGT_Menu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& Ses
 			return;
 		}
 	}
+	// If no session was found, enable the join button
+	if (!bWasSuccessful || SessionResults.Num() == 0) {
+		BTN_Join->SetIsEnabled(true);
+	}
 }
 void UCpp_WGT_Menu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result) {
 	// If the join was successful, travel to the game map
@@ -96,6 +103,10 @@ void UCpp_WGT_Menu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result) {
 			}
 		}
 	}
+	// If the join failed, enable the join button
+	if (Result != EOnJoinSessionCompleteResult::Success) {
+		BTN_Join->SetIsEnabled(true);
+	}
 }
 void UCpp_WGT_Menu::OnDestroySession(const bool bWasSuccessful) {
 
@@ -105,11 +116,15 @@ void UCpp_WGT_Menu::OnStartSession(const bool bWasSuccessful) {
 }
 
 void UCpp_WGT_Menu::OnHostClicked() {
+	BTN_Host->SetIsEnabled(false);
+	
 	if (MultiplayerSessionSubsystem) {
 		MultiplayerSessionSubsystem->CreateSession(NumPublicConnections, MatchType);
 	}
 }
 void UCpp_WGT_Menu::OnJoinClicked() {
+	BTN_Join->SetIsEnabled(false);
+	
 	if (MultiplayerSessionSubsystem) {
 		MultiplayerSessionSubsystem->FindSessions(10000);
 	}
