@@ -6,7 +6,9 @@
 #include "Cpp_GISubsystem_Sessions.h"
 #include "OnlineSessionSettings.h"
 
-void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FString& InMatchType) {
+void UCpp_WGT_Menu::InitializeMenu(const int32 PublicConnectionsCount, const FString& InMatchType, const FString& LobbyPath) {
+	// Set the path to the lobby map + making it listen server
+	PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
 	NumPublicConnections = PublicConnectionsCount;
 	MatchType = InMatchType;
 
@@ -62,7 +64,7 @@ void UCpp_WGT_Menu::OnCreateSession(const bool bWasSuccessful) {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, bWasSuccessful ? "Session Created!" : "Session Creation Failed!");
 	if (bWasSuccessful) {
 		if (UWorld* World = GetWorld()) {
-			World->ServerTravel("/Game/ThirdPerson/Maps/LobbyMap?listen");
+			World->ServerTravel(PathToLobby);
 			DestroyWidget();
 		}
 	}

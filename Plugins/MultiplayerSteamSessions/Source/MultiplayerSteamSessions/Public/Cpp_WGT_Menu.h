@@ -24,7 +24,7 @@ public:
 	// FUNCTIONS
 	//================================================================================================================
 	UFUNCTION(BlueprintCallable, Category = "Setup")
-	void InitializeMenu(const int32 PublicConnectionsCount = 4, const FString& InMatchType = "FreeForAll");
+	void InitializeMenu(const int32 PublicConnectionsCount = 4, const FString& InMatchType = "FreeForAll", const FString& LobbyPath = "/Game/ThirdPerson/Maps/LobbyMap");
 
 protected:
 	//================================================================================================================
@@ -58,6 +58,7 @@ private:
 
 	int32 NumPublicConnections{4};
 	FString MatchType{"FreeForAll"};
+	FString PathToLobby = "";
 	
 	//================================================================================================================
 	// FUNCTIONS
