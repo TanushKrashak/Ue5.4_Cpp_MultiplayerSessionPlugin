@@ -28,6 +28,12 @@ void UCpp_GISubsystem_Sessions::CreateSession(const int32 NumPublicConnections, 
 	}
 	// Destroy the existing session if it exists
 	if (auto ExistingSession = SessionInterface.Pin()->GetNamedSession(NAME_GameSession); ExistingSession != nullptr) {
+		bCreateSessionOnDestroy = true;
+		LastNumPublicConnections = NumPublicConnections;
+		LastMatchType = MatchType;
+
+		DestroySession();
+		
 		SessionInterface.Pin()->DestroySession(NAME_GameSession);
 	}
 	// Store the delegate so that it can be removed later. Also, bind the delegate to the internal callback
@@ -96,7 +102,17 @@ void UCpp_GISubsystem_Sessions::JoinSession(const FOnlineSessionSearchResult& Se
 	}
 }
 void UCpp_GISubsystem_Sessions::DestroySession() {
-	
+	if (!SessionInterface.IsValid()) {
+		MultiplayerOnDestroySessionComplete.Broadcast(false);
+		return;
+	}
+	// Store the delegate so that it can be removed later. Also, bind the delegate to the internal callback
+	DestroySessionCompleteDelegateHandle =  SessionInterface.Pin()->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+	// Destroy the session, if it fails, remove the delegate & let the menu know that it failed
+	if (!SessionInterface.Pin()->DestroySession(NAME_GameSession)) {
+		SessionInterface.Pin()->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+		MultiplayerOnDestroySessionComplete.Broadcast(false);
+	}
 }
 void UCpp_GISubsystem_Sessions::StartSession() {
 	
@@ -131,8 +147,17 @@ void UCpp_GISubsystem_Sessions::OnJoinSessionComplete(const FName SessionName, E
 
 	MultiplayerOnJoinSessionComplete.Broadcast(Result);
 }
-void UCpp_GISubsystem_Sessions::OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const {
-
+void UCpp_GISubsystem_Sessions::OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) {
+	if (SessionInterface.IsValid()) {
+		SessionInterface.Pin()->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+	}
+	// IF session was destroyed when creating a new session, create the new session now
+	if (bWasSuccessful && bCreateSessionOnDestroy) {
+		bCreateSessionOnDestroy = false;
+		CreateSession(LastNumPublicConnections, LastMatchType);
+	}
+	// Let the menu know that the session was destroyed
+	MultiplayerOnDestroySessionComplete.Broadcast(bWasSuccessful);
 }
 void UCpp_GISubsystem_Sessions::OnStartSessionComplete(const FName SessionName, const bool bWasSuccessful) const {
 

@@ -58,7 +58,7 @@ protected:
 	void OnCreateSessionComplete(const FName SessionName, const bool bWasSuccessful);
 	void OnFindSessionsComplete(const bool bWasSuccessful);
 	void OnJoinSessionComplete(const FName SessionName, EOnJoinSessionCompleteResult::Type Result);
-	void OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful) const;
+	void OnDestroySessionComplete(const FName SessionName, const bool bWasSuccessful);
 	void OnStartSessionComplete(const FName SessionName, const bool bWasSuccessful) const;
 	
 private:
@@ -85,5 +85,9 @@ private:
 	
 	FOnStartSessionCompleteDelegate StartSessionCompleteDelegate;
 	FDelegateHandle StartSessionCompleteDelegateHandle;
-	
+
+
+	bool bCreateSessionOnDestroy = false;
+	int32 LastNumPublicConnections = 0;
+	FString LastMatchType = "";
 };
